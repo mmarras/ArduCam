@@ -1,0 +1,89 @@
+---------------------------------------------------------------------------
+PiCameraMMALError                         Traceback (most recent call last)
+/usr/lib/python3/dist-packages/picamera/camera.py in capture(self, output, format, use_video_port, resize, splitter_port, bayer, **options)
+   1417                 camera_port.params[mmal.MMAL_PARAMETER_ENABLE_RAW_CAPTURE] = True
+-> 1418             encoder.start(output)
+   1419             # Wait for the callback to set the event indicating the end of
+
+/usr/lib/python3/dist-packages/picamera/encoders.py in start(self, output)
+   1165         self._image_size = self._frame_size
+-> 1166         super(PiRawImageMixin, self).start(output)
+   1167 
+
+/usr/lib/python3/dist-packages/picamera/encoders.py in start(self, output)
+    376         with self.parent._encoders_lock:
+--> 377             self.output_port.enable(self._callback)
+    378             if self.DEBUG > 0:
+
+/usr/lib/python3/dist-packages/picamera/mmalobj.py in enable(self, callback)
+   1248                     mmal.mmal_port_enable(self._port, self._wrapper),
+-> 1249                     prefix="Unable to enable port %s" % self.name)
+   1250                 # If this port is an output port, send it all the buffers
+
+/usr/lib/python3/dist-packages/picamera/exc.py in mmal_check(status, prefix)
+    183     if status != mmal.MMAL_SUCCESS:
+--> 184         raise PiCameraMMALError(status, prefix)
+    185 
+
+PiCameraMMALError: Unable to enable port vc.ril.camera:out:2: Out of memory
+
+During handling of the above exception, another exception occurred:
+
+PiCameraValueError                        Traceback (most recent call last)
+<ipython-input-103-37dc45765e81> in <module>
+      6                         camera.MAX_RESOLUTION.width
+      7 			,camera.MAX_RESOLUTION.height)
+----> 8                 camera.capture(output, 'rgb')
+      9                 plt.imshow(output.array)
+     10                 data = output.array
+
+/usr/lib/python3/dist-packages/picamera/camera.py in capture(self, output, format, use_video_port, resize, splitter_port, bayer, **options)
+   1423                     'Timed out waiting for capture to end')
+   1424         finally:
+-> 1425             encoder.close()
+   1426             with self._encoders_lock:
+   1427                 if use_video_port:
+
+/usr/lib/python3/dist-packages/picamera/encoders.py in close(self)
+    429         attributes.
+    430         """
+--> 431         self.stop()
+    432         if self.encoder:
+    433             self.encoder.disconnect()
+
+/usr/lib/python3/dist-packages/picamera/encoders.py in stop(self)
+    417             self.output_port.disable()
+    418         self.event.set()
+--> 419         self._close_output()
+    420 
+    421     def close(self):
+
+/usr/lib/python3/dist-packages/picamera/encoders.py in _close_output(self, key)
+    347                 pass
+    348             else:
+--> 349                 mo.close_stream(output, opened)
+    350 
+    351     @property
+
+/usr/lib/python3/dist-packages/picamera/mmalobj.py in close_stream(stream, opened)
+    369     else:
+    370         try:
+--> 371             stream.flush()
+    372         except AttributeError:
+    373             pass
+
+/usr/lib/python3/dist-packages/picamera/array.py in flush(self)
+    236     def flush(self):
+    237         super(PiRGBArray, self).flush()
+--> 238         self.array = bytes_to_rgb(self.getvalue(), self.size or self.camera.resolution)
+    239 
+    240 
+
+/usr/lib/python3/dist-packages/picamera/array.py in bytes_to_rgb(data, resolution)
+    125         if len(data) != (fwidth * fheight * 3):
+    126             raise PiCameraValueError(
+--> 127                 'Incorrect buffer length for resolution %dx%d' % (width, height))
+    128     # Crop to the actual resolution
+    129     return np.frombuffer(data, dtype=np.uint8).\
+
+PiCameraValueError: Incorrect buffer length for resolution 3280x2464
